@@ -1,0 +1,9 @@
+bin
+/data
+lib_managed
+project/boot
+project/build/target
+target
+tmp
+*.tgz
+.cache
