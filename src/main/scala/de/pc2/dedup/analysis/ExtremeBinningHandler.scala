@@ -217,7 +217,7 @@ class ExtremeBinningHandler(config: ExtremeBinningConfig, output: Option[String]
   val stats = new ListBuffer[ExtremeBinningStatistics]
   val gson = new GsonBuilder().setPrettyPrinting().create()
   val binIndex = new BinIndex(16 * 1024 * 1024, config, ioTrace)
-  val digestFactory = new DigestFactory("MD5", 8)
+  val digestFactory = new DigestFactory("MD5", 8, None)
 
   var traceFileCount = 0
   var currentBlockId = 0
