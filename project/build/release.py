@@ -29,6 +29,7 @@ if __name__ == "__main__":
     release_tar.add("conf/log4j.xml", "fs-ca/conf/log4j.xml")
     release_tar.add("conf//log4j_debug.xml", "fs-ca/conf/log4j_debug.xml")
     release_tar.add("src/main/other/fs-ca", "fs-ca/bin/fs-ca")
+    release_tar.add("src/main/other/fs-ca-rehash", "fs-ca/bin/fs-ca-rehash")
     release_tar.add("project/boot/scala-2.9.0/lib/scala-library.jar", "fs-ca/lib/scala-library.jar")
     release_tar.add("lib_managed/scala_2.9.0/compile/argot_2.9.0-0.3.1.jar", "fs-ca/lib/argot-0.3.1.jar")
     release_tar.add("lib_managed/scala_2.9.0/compile/grizzled-scala_2.9.0-1.0.6.jar", "fs-ca/lib/grizzled-1.0.6.jar")

@@ -1,0 +1,115 @@
+#!/usr/bin/python
+import sys
+import os
+import subprocess
+    
+def help():
+    return "fs-ca-rehash [Options]"
+
+def run(cmd):
+    return subprocess.Popen(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT).stdout.read()
+
+def get_fsca_root():
+    mod = sys.modules[__name__]
+    return os.path.normpath(os.path.join(os.path.dirname(mod.__file__), ".."))
+
+def from_fsca_root(*args):
+    return os.path.normpath(os.path.join(get_fsca_root(), *args))
+
+def get_fsc_cp():
+    cp = []
+    fs_c_root = os.environ.get("FSC_ROOT", from_fsca_root("../fsc"))
+    if not os.path.exists(fs_c_root):
+        raise Exception("Failed to find FS-C. Please set FSC_ROOT env variable")
+    dirs = [fs_c_root, os.path.join(fs_c_root, "lib")]
+    for dir in dirs:
+        for f in os.listdir(dir):
+            if f.endswith(".jar"):
+                cp.append(os.path.join(dir, f))
+    
+    fs_c_dev_cp = os.path.join(fs_c_root, "target/scala_2.9.0/classes")
+    if os.path.exists(fs_c_dev_cp):
+        cp.append(fs_c_dev_cp)
+    return cp
+
+def get_cp():
+    cp = []
+    dirs = [from_fsca_root("."), from_fsca_root("lib")]
+    for dir in dirs:
+        for f in os.listdir(dir):
+            if f.endswith(".jar"):
+                cp.append(os.path.join(dir, f))
+    cp.extend(get_fsc_cp())
+    return cp
+
+def check_python_version():
+    v = sys.version_info
+    if v[0] != 2 or v[1] < 4:
+        raise Exception("No supported python version")
+
+def get_java_command():
+    cmd_args = ["java"]
+    if "JAVA_HOME" in os.environ:
+        cmd_args[0] = os.path.join(os.environ["JAVA_HOME"], "bin/java")
+    if "FSCA_JAVA_HOME" in os.environ:
+        cmd_args[0] = os.path.join(os.environ["FSCA_JAVA_HOME"], "bin/java")
+    return " ".join(cmd_args)
+    
+def check_java_version():
+    try:
+        r = run("%s -version" % get_java_command())
+        supported_version = ["1.5", "1.6", "1.7"]
+        for v in supported_version:
+            if r.find(v) >= 0:
+                return True
+    except :
+        raise Exception("Failed to detect java version")
+    raise Exception("No supported java version found")
+    
+if __name__ == "__main__":
+    try:
+        check_python_version()
+
+        java_class = None
+        if len(sys.argv) < 1:
+            print help()
+            sys.exit()
+        args = sys.argv[1:]
+        
+        java_check = True
+        for i in xrange(len(args)):
+            if args[i] == "--no-java-check":
+                java_check = False
+                del args[i]
+                break
+        if java_check:
+            check_java_version()
+        
+        system_properties = []
+        java_class = "de.pc2.dedup.util.RehashMain"     
+        cmd_args = [get_java_command()]
+        if "FSCA_JXM" in os.environ:
+            cmd_args.append("-Dcom.sun.management.jmxremote")
+        if "FSCA_XMX" in os.environ:
+            cmd_args.append("-Xmx%s" % os.environ["FSCA_XMX"])
+        else:
+            cmd_args.append("-Xmx2G")
+        if "FSCA_NICE" in os.environ:
+            cmd_args.insert(0, "nice -%s" % os.environ["FSCA_NICE"])
+        cmd_args.extend(system_properties)
+        if "FSCA_JAVA_OPTS" in os.environ:
+            cmd_args.append(os.environ["FSCA_JAVA_OPTS"])
+        cmd_args.extend(["-cp",":".join(get_cp()), java_class])
+        cmd_args.extend(args)
+    
+        cmd = " ".join(cmd_args)
+        os.system(cmd)
+    except KeyboardInterrupt:
+        sys.exit(1)
+    except SystemExit:
+        sys.exit(1)
+    except:
+        print str(sys.exc_info())
+        sys.exit(1)
+    sys.exit(0)
+

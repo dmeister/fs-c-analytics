@@ -21,5 +21,6 @@ class FSCAnalysisProject(info: ProjectInfo) extends DefaultProject(info)
   val guava = "com.google.guava" % "guava" % "13.0.1"
   val gson = "com.google.code.gson" % "gson" % "1.7.1"  
   val log4j =  "log4j" % "log4j" % "1.2.16"
+  val commonscodec = "commons-codec" % "commons-codec" % "1.6"
   val commonsCollections = "commons-collections" % "commons-collections" % "3.1"
 }
